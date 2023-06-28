@@ -68,34 +68,37 @@ func (a ElasticsearchAdapter) FetchTables() ([]table, error) {
 
 	es := a.DB
 
-	var r []interface{}
-
-	res, err := es.Cat.Indices(
-		es.Cat.Indices.WithIndex([]string{a.indices}...),
-		es.Cat.Indices.WithS("index"),
-		es.Cat.Indices.WithFormat("json"),
-	)
+	// try to fetch alias first
+	res, err := es.Indices.GetAlias(es.Indices.GetAlias.WithName([]string{a.indices}...))
 	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	err = checkResult(res)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		return nil, fmt.Errorf("error parsing the response body: %s", err)
-	}
-
-	for _, index := range r {
-		indexName := index.(map[string]interface{})["index"].(string)
-
-		// skip system indices
-		if indexName[0] != '.' {
-			tables = append(tables, table{Schema: "", Name: indexName})
+		// fallback to fetching indices if the alias doesn't exist
+		res, err = es.Cat.Indices(
+			es.Cat.Indices.WithIndex([]string{a.indices}...),
+			es.Cat.Indices.WithS("index"),
+			es.Cat.Indices.WithFormat("json"),
+		)
+		if err != nil {
+			return nil, err
 		}
+		defer res.Body.Close()
+
+		var r []map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+			return nil, fmt.Errorf("error parsing the response body: %s", err)
+		}
+
+		for _, index := range r {
+			indexName := index["index"].(string)
+
+			// skip system indices
+			if indexName[0] != '.' {
+				tables = append(tables, table{Schema: "", Name: indexName})
+			}
+		}
+	} else {
+		// if alias exists, use it as table name
+		defer res.Body.Close()
+		tables = append(tables, table{Schema: "", Name: a.indices})
 	}
 
 	return tables, nil

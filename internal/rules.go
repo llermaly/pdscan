@@ -3,7 +3,7 @@ package internal
 import (
 	"regexp"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 )
 
 type nameRule struct {
@@ -60,6 +60,11 @@ var regexRules = []regexRule{
 	regexRule{Name: "oauth_token", DisplayName: "OAuth tokens", Regex: regexp.MustCompile(`ya29\..{60,200}`)}, // google
 	// TODO make high confidence
 	regexRule{Name: "mac", DisplayName: "MAC addresses", Regex: regexp.MustCompile(`\b[0-9a-fA-F]{2}(?:(?::|%3A)[0-9a-fA-F]{2}){5}\b`)},
+	// // Custom Rules
+	regexRule{Name: "jwt", DisplayName: "JWT Tokens", Regex: regexp.MustCompile(`(access_token=)[a-zA-Z0-9_.-]+|(accessToken=)[a-zA-Z0-9_.-]+|("?bearerToken"?: *"?)[a-zA-Z0-9_.-]+("?)|(Authorization: +Bearer +)[a-zA-Z0-9_.-]+|(Bearer +)[a-zA-Z0-9_.-]+`)},
+	regexRule{Name: "imei", DisplayName: "IMEI Numbers", Regex: regexp.MustCompile(`('imei': *')[a-zA-Z0-9]+(')|\\*"imei\\*": *\\*"[a-zA-Z0-9]+\\*"`)},
+	regexRule{Name: "card_info", DisplayName: "Card Info", Regex: regexp.MustCompile(`'card(Number|Name|Ctype)': *'[a-zA-Z0-9 -]+'|\\*"card(Number|Name|Ctype)\\*": *\\*"[0-9a-zA-Z -]+\\*"`)},
+	regexRule{Name: "phone_number_text", DisplayName: "Phone numbers in text", Regex: regexp.MustCompile(`phone number: (\d+)`)},
 }
 
 // first 300 from 2010 US Census https://www.census.gov/topics/population/genealogy/data/2010_surnames.html

@@ -1,0 +1,6 @@
+'cardNumber': '1234567890123456'
+'cardName': 'John Doe'
+'cardCtype': 'Visa'
+\"cardNumber\": \"9876543210987654\"
+\"cardName\": \"Jane Doe\"
+\"cardCtype\": \"Mastercard\"
